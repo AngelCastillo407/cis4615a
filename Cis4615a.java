@@ -7,12 +7,15 @@ import java.io.DataOutputStream;
 import java.io.File; 
 import java.util.Scanner;  // Import the Scanner classcl 
 import java.math.BigInteger; 
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.Arrays; 
 
 public class Cis4615a {
 
 	// RULE 00:
-	// INCORRECT
-	// DOESN'T SANITIZE DATA BEFORE LOGGING 
+	// CORRECT
+	// SANITIZES DATA BEFORE LOGGING 
 	
 	public void rule00()
 	{
@@ -21,7 +24,7 @@ public class Cis4615a {
 		Logger logger = Logger.getLogger( Cis4615a.class.getName());
 		logger.setLevel(Level.SEVERE); 		 
 		
-		System.out.println("Press any key then press enter to sucessfully login:");
+		System.out.println("Enter your username then press enter \n(login is a success as long as length of username is not 0):");
 		
 		Scanner scanner = new Scanner(System.in);
 		String userName = scanner.nextLine();  // Read user input
@@ -30,116 +33,169 @@ public class Cis4615a {
 			loginSucessful = 1;
 		
 		if (loginSucessful == 1)
-			logger.severe("User Login succeeded for: " + userName);
+			logger.severe("User Login succeeded for: " + sanitizeUser(userName));
 		else 
-			logger.severe("User login failed for: " + userName);
+			logger.severe("User login failed for: " + sanitizeUser(userName));
+	}
+	
+	public String sanitizeUser (String username) 
+	{
+		boolean a = Pattern.matches("[a-zA-Z0-9_]+", username);
+		
+		if (a == false)
+			return "unauthorized user";
+		
+		return username + " , a username that was sanitized";
 	}
 	
 	// RULE 02:
-	// INCORRECT
-	// IGNORES VALUE RETURNED BY METHOD
+	// CORRECT
+	// DOESN'T IGNORE VALUE RETURNED BY METHOD
 	
 	public void rule02()
 	{
 		File someFile = new File("someFileName.txt");
 		// Do something with someFile
-		someFile.delete();
+		
+		try
+		{
+			if (! someFile.createNewFile() )
+				System.out.println("\nCouldn't create that file sir! \n[But we didn't ignore value returned by the method createNewFile]");
+			else
+				System.out.println("\nFile created sir! \n[And we didn't ignore value returned by the method createNewFile]");
+		}
+		
+		catch(IOException e) 
+		{
+			// Do Nothing
+		}
 	}
 	
 	// RULE 02:
 	// EXP02-J. Do not use the Object.equals() method to compare two arrays
-	// INCORRECT
-	// USES Object.EQUALS
+	// CORRECT
+	// DOESN'T USE Object.EQUALS
 	
 	public void rule02b(int[] arr1, int[] arr2)
 	{
-		System.out.println(arr1.equals(arr2)); // Prints false
+		System.out.println("\nIf i compare these 2 arrays using Array.equals and NOT use their respective Object.equals, \nI get the proper result: " + Arrays.equals(arr1, arr2)); // Prints true
 	}
 
 	// RULE 03:
-	// INCORRECT
-	// DOESN'T FULLY REPRESENT POSSIBLE RANGE OF UNSIGNED DATA
+	// CORRECT
+	// FULLY REPRESENT POSSIBLE RANGE OF UNSIGNED DATA
 	
-	public static int rule03(DataInputStream is) throws IOException 
+	public static long rule03(DataInputStream is) throws IOException 
 	{
-		return is.readInt();
+		System.out.println("\nWhen I scan this datastream for an integer, \nI fully represent the possible range of unsigned data by masking readInt with & 0xFFFFFFFFL");
+		return is.readInt() & 0xFFFFFFFFL; // Mask with 32 one-bits
 	}
 
 	// RULE 03:
 	// NUM01-J. Do not perform bitwise and arithmetic operations on the same data
-	// INCORRECT
-	// PERFORMS BITWISE AND ARITHMETIC OPERATIONS ON THE SAME DATA
+	// CORRECT
+	// DOES NOT PERFORM BITWISE AND ARITHMETIC OPERATIONS ON THE SAME DATA
 	
 	public static void rule03b() 
 	{
 		int x = 50;
-		int y = x << 2;
-		x += y + 1;
+		x = 5 * x + 1;
 		
-		System.out.println("When you perform bitwise and arithmetic operations you get x = " + x + "  , a value NOT intended");
+		System.out.println("\nWhen you perform bitwise and arithmetic operations SEPERATELY vs SIMULTANEOUSLY you get x = " + x + ",\n a value that IS intended");
 	}
 	
 	// RULE 04: 
-	// INCORRECT
-	// ENCODES NONCHARACTER DATA AS A STRING
+	// CORRECT
+	// DOES NOT ENCODE NONCHARACTER DATA AS A STRING
 	
 	public void rule04()
 	{
 		BigInteger x = new BigInteger("530500452766");
-		byte[] byteArray = x.toByteArray();
-		String s = new String(byteArray);
-		byteArray = s.getBytes();
-		x = new BigInteger(byteArray);
+		String s = x.toString(); // Valid Character Data
+		byte[] byteArray = s.getBytes();
+		String ns = new String(byteArray);
+		x = new BigInteger(ns);
+		
+		System.out.println("\n" + x + " is the Big Integer resultant when you DON'T encode noncharacter data as a string \n(thus following the proper practice)");
 	}
 	
 	// RULE 05: Object Orientation (OBJ)
 	// OBJ09-J. Compare classes and not class names
-	// INCORRECT
-	// COMPARES CLASS NAMES AND NOT ACTUAL CLASSSES
+	// CORRECT
+	// COMPARES ACTUAL CLASSSES AND NOT CLASS NAMES
 	
 	public void rule05(Cis4615a x, Cis4615a y )
 	{
 		// Determine whether objects x and y have the same class name
-		if (x.getClass().getName().equals(y.getClass().getName())) 
+		if ( x.getClass() == y.getClass() ) 
 		{
-			System.out.println("These objects have the same class, I checked comparing the class names (and not the classes themselves, WRONG!)");
+			System.out.println("\nThese objects have the same class, I checked comparing the ACTUAL classes \n(and not the class names which is WRONG!)");
 		}
-		
 	}
 	
 	// RULE 06:
-	// INCORRECT
-	// USES ASSERTIONS TO VALIDATE METHOD ARGUMENTS
+	// CORRECT
+	// DOESN'T USE ASSERTIONS TO VALIDATE METHOD ARGUMENTS
 	
 	public static int rule06(int x, int y)
 	{
-		assert x != Integer.MIN_VALUE;
-		assert y != Integer.MIN_VALUE;
+		if (x == Integer.MIN_VALUE || y == Integer.MIN_VALUE) 
+		{
+			throw new IllegalArgumentException();
+		}
+		
 		int absX = Math.abs(x);
 		int absY = Math.abs(y);
-		assert ( (absX) <= (Integer.MAX_VALUE - absY) );
+		
+		if (absX > Integer.MAX_VALUE - absY) 
+		{
+			throw new IllegalArgumentException();
+		}
+		
+		System.out.println("\nThe absolute value sum of " + x + " and " + y + " is equal to " + (absX+absY));
+		System.out.println("This summation does NOT use assertions to validate method arguments when using abs()");
+		
 		return absX + absY;
 	}
 
 	// RULE 06:
 	// MET00-J. Validate method arguments
-	// INCORRECT
-	// DOESNT VALIDATE METHOD ARGUMENTS
+	// CORRECT
+	// DOES VALIDATE METHOD ARGUMENTS
 	
 	public static int rule06b(int x, int y)
 	{
+		if (y == 0)
+		{
+				System.out.println("\nThe number " + x + " divided by " + y + " is undefined");
+				System.out.println("This method checks if the second number is 0 because we VALIDATE METHOD ARGUMENTS");
+				return 0;
+		}
+	
+		
 		// Could possibly run into divide by 0 problem
+		
+		System.out.println("\nThe number " + x + " divided by " + y + " is equal to " + (x / y));
+		System.out.println("This method checks if the second number is 0 because we VALIDATE METHOD ARGUMENTS");
 		return x / y;
 	}
 	
 	// RULE 49: MISCELLANEOUS (
 	// MSC01-J. Do not use an empty infinite loop
-	// INCORRECT
-	// USES AN EMPTY INFINITE LOOP
+	// CORRECT
+	// DOESN'T USE AN EMPTY INFINITE LOOP
 	
 	public void rule49()
 	{
-		while(true) {}
+		
+		System.out.println("\nMy favorite rule: do NOT use an empty infinite loop, \nthe compiler will sometimes ignore your infinite loop and skip over it,\nseeing it as taking up cpu cycles while doing nothing"); 
+		System.out.println("\nIf you have your infinite loop do Thread.yield(), it will loop infinitely as intended :)");
+		System.out.println("Since I did it properly you are now in an infinite loop, please close the program or use ctrl+c if on windows to exit");
+		System.out.println("\n- from ANGEL CASTILLO");
+		while(true) 
+		{
+			 Thread.yield();
+		}
 	}
 	
     public static void main(String[] args) {
@@ -148,6 +204,7 @@ public class Cis4615a {
 		Cis4615a aa = new Cis4615a();
 		Cis4615a aaa = new Cis4615a();
 		int b = 0;
+		long bb = 0;
 		
 		a.rule00();
 		a.rule02();
@@ -164,7 +221,7 @@ public class Cis4615a {
 			
 			DataInputStream stream = new DataInputStream(new FileInputStream("NumText.txt"));
 
-			b = a.rule03(stream);
+			bb = a.rule03(stream);
 		}
 		
 		catch(IOException e) 
@@ -182,11 +239,7 @@ public class Cis4615a {
 		
 		b = a.rule06b(5,4);
 		
-		System.out.println("File returned an int value of: " + b);
-					
-        System.out.println("- from ANGEL CASTILLO");
-		
-		a.rule49();
+		 a.rule49();
     }
 
 }
