@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.DataOutputStream;
 import java.io.File; 
 import java.util.Scanner;  // Import the Scanner classcl 
+import java.math.BigInteger; 
 
 public class Cis4615a {
 
@@ -45,7 +46,7 @@ public class Cis4615a {
 		someFile.delete();
 	}
 
-	// RULE 03
+	// RULE 03:
 	// INCORRECT
 	// DOESN'T FULLY REPRESENT POSSIBLE RANGE OF UNSIGNED DATA
 	
@@ -54,14 +55,31 @@ public class Cis4615a {
 		return is.readInt();
 	}
 
+	// RULE 04: 
+	// INCORRECT
+	// ENCODES NONCHARACTER DATA AS A STRING
+	
 	public void rule04()
 	{
-		
+		BigInteger x = new BigInteger("530500452766");
+		byte[] byteArray = x.toByteArray();
+		String s = new String(byteArray);
+		byteArray = s.getBytes();
+		x = new BigInteger(byteArray);
 	}
 
-	public void rule06()
+	// RULE 06:
+	// INCORRECT
+	// USES ASSERTIONS TO VALIDATE METHOD ARGUMENTS
+	
+	public static int rule06(int x, int y)
 	{
-		
+		assert x != Integer.MIN_VALUE;
+		assert y != Integer.MIN_VALUE;
+		int absX = Math.abs(x);
+		int absY = Math.abs(y);
+		assert ( (absX) <= (Integer.MAX_VALUE - absY) );
+		return absX + absY;
 	}	
 	
     public static void main(String[] args) {
@@ -87,6 +105,9 @@ public class Cis4615a {
 			 e.printStackTrace();
 		}
 
+		a.rule04();
+		
+		b = a.rule06(5,4);
 		
 		System.out.println("File returned an int value of: " + b);
 					
